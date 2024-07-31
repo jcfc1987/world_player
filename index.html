@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Three.js Dual Controls Example</title>
+  <title>Three.js VR Example</title>
   <style>
     body { margin: 0; }
     canvas { display: block; }
@@ -11,10 +11,11 @@
 </head>
 <body>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three/examples/js/vr/VRButton.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three/examples/js/controls/DeviceOrientationControls.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three/examples/js/controls/PointerLockControls.js"></script>
   <script>
-    let scene, camera, renderer;
+    let scene, camera, renderer, controls;
     let deviceControls, mouseControls;
     let isMobile = /Mobi|Android/i.test(navigator.userAgent);
 
@@ -34,7 +35,12 @@
       renderer = new THREE.WebGLRenderer({ antialias: true });
       renderer.setSize(window.innerWidth, window.innerHeight);
       document.body.appendChild(renderer.domElement);
+      renderer.vr.enabled = true; // Enable VR mode for the renderer
       console.log('Renderer added to DOM');
+
+      // Add VR Button
+      document.body.appendChild(VRButton.createButton(renderer));
+      console.log('VRButton added');
 
       // Add a simple object (cube) for visual reference
       let geometry = new THREE.BoxGeometry(1, 1, 1);
@@ -50,7 +56,7 @@
       } else {
         mouseControls = new THREE.PointerLockControls(camera, renderer.domElement);
         console.log('Using PointerLockControls');
-        
+
         // Add event listener to toggle pointer lock
         document.addEventListener('click', () => {
           mouseControls.lock();
@@ -72,16 +78,16 @@
     }
 
     function animate() {
-      requestAnimationFrame(animate);
+      renderer.setAnimationLoop(() => {
+        // Update controls based on the type
+        if (isMobile && deviceControls) {
+          deviceControls.update();
+        } else if (mouseControls) {
+          // PointerLockControls does not have an update method; it's updated internally
+        }
 
-      // Update controls based on the type
-      if (isMobile && deviceControls) {
-        deviceControls.update();
-      } else if (mouseControls) {
-        // PointerLockControls does not have an update method; it's updated internally
-      }
-
-      renderer.render(scene, camera);
+        renderer.render(scene, camera);
+      });
       console.log('Rendering frame');
     }
 
