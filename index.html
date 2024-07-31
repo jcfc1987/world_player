@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Three.js Gyroscope Example</title>
+  <title>Three.js Manual Gyroscope Example</title>
   <style>
     body { margin: 0; }
     canvas { display: block; }
@@ -11,9 +11,9 @@
 </head>
 <body>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three/examples/js/controls/DeviceOrientationControls.js"></script>
   <script>
-    let scene, camera, renderer, controls;
+    let scene, camera, renderer;
+    let alpha = 0, beta = 0, gamma = 0;
 
     function init() {
       console.log('Initializing scene...');
@@ -32,9 +32,6 @@
       document.body.appendChild(renderer.domElement);
       console.log('Renderer added to DOM');
 
-      // DeviceOrientationControls setup
-      controls = new THREE.DeviceOrientationControls(camera);
-
       // Add a simple object (cube) for visual reference
       let geometry = new THREE.BoxGeometry(1, 1, 1);
       let material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
@@ -45,26 +42,21 @@
       // Handle window resize
       window.addEventListener('resize', onWindowResize, false);
 
-      // Check for device orientation permission (if needed)
-      if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-        DeviceOrientationEvent.requestPermission()
-          .then(permissionState => {
-            if (permissionState === 'granted') {
-              window.addEventListener('deviceorientation', animate);
-              console.log('Device orientation permission granted');
-            } else {
-              console.warn('Device orientation permission denied');
-            }
-          })
-          .catch(console.error);
-      } else {
-        console.log('DeviceOrientationEvent.requestPermission not required');
-        animate(); // Start animation if no permission request is needed
-      }
+      // Manual device orientation handling
+      window.addEventListener('deviceorientation', handleOrientation, true);
+
+      // Start animation loop
+      animate();
+    }
+
+    function handleOrientation(event) {
+      alpha = event.alpha ? THREE.Math.degToRad(event.alpha) : 0; // Z
+      beta = event.beta ? THREE.Math.degToRad(event.beta) : 0;   // X'
+      gamma = event.gamma ? THREE.Math.degToRad(event.gamma) : 0; // Y''
+      console.log(`Orientation: alpha=${alpha}, beta=${beta}, gamma=${gamma}`);
     }
 
     function onWindowResize() {
-      // Adjust camera aspect ratio and renderer size on window resize
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
@@ -72,9 +64,11 @@
     }
 
     function animate() {
-      // Continuously update the controls and render the scene
       requestAnimationFrame(animate);
-      controls.update();
+
+      // Update camera orientation based on device orientation
+      camera.rotation.set(beta, alpha, -gamma, "YXZ");
+
       renderer.render(scene, camera);
     }
 
