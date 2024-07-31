@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Three.js Manual Gyroscope Example</title>
+  <title>Three.js Dual Controls Example</title>
   <style>
     body { margin: 0; }
     canvas { display: block; }
@@ -11,9 +11,12 @@
 </head>
 <body>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three/examples/js/controls/DeviceOrientationControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three/examples/js/controls/PointerLockControls.js"></script>
   <script>
     let scene, camera, renderer;
-    let alpha = 0, beta = 0, gamma = 0;
+    let deviceControls, mouseControls;
+    let isMobile = /Mobi|Android/i.test(navigator.userAgent);
 
     function init() {
       console.log('Initializing scene...');
@@ -24,6 +27,7 @@
       // Camera setup
       camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
       camera.position.set(0, 0, 5); // Position camera
+      camera.lookAt(0, 0, 0); // Ensure the camera is looking at the scene center
       console.log(`Camera initial position: ${camera.position.x}, ${camera.position.y}, ${camera.position.z}`);
 
       // Renderer setup
@@ -39,21 +43,25 @@
       scene.add(cube);
       console.log('Cube added to scene');
 
+      // Initialize controls based on device type
+      if (isMobile) {
+        deviceControls = new THREE.DeviceOrientationControls(camera);
+        console.log('Using DeviceOrientationControls');
+      } else {
+        mouseControls = new THREE.PointerLockControls(camera, renderer.domElement);
+        console.log('Using PointerLockControls');
+        
+        // Add event listener to toggle pointer lock
+        document.addEventListener('click', () => {
+          mouseControls.lock();
+        });
+      }
+
       // Handle window resize
       window.addEventListener('resize', onWindowResize, false);
 
-      // Manual device orientation handling
-      window.addEventListener('deviceorientation', handleOrientation, true);
-
       // Start animation loop
       animate();
-    }
-
-    function handleOrientation(event) {
-      alpha = event.alpha ? THREE.Math.degToRad(event.alpha) : 0; // Z
-      beta = event.beta ? THREE.Math.degToRad(event.beta) : 0;   // X'
-      gamma = event.gamma ? THREE.Math.degToRad(event.gamma) : 0; // Y''
-      console.log(`Orientation: alpha=${alpha}, beta=${beta}, gamma=${gamma}`);
     }
 
     function onWindowResize() {
@@ -66,10 +74,15 @@
     function animate() {
       requestAnimationFrame(animate);
 
-      // Update camera orientation based on device orientation
-      camera.rotation.set(beta, alpha, -gamma, "YXZ");
+      // Update controls based on the type
+      if (isMobile && deviceControls) {
+        deviceControls.update();
+      } else if (mouseControls) {
+        // PointerLockControls does not have an update method; it's updated internally
+      }
 
       renderer.render(scene, camera);
+      console.log('Rendering frame');
     }
 
     // Initialize the scene
