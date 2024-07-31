@@ -13,50 +13,56 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three/examples/js/controls/DeviceOrientationControls.js"></script>
   <script>
-    // Basic setup for the scene
     let scene, camera, renderer, controls;
 
     function init() {
-      // Scene
+      // Scene setup
       scene = new THREE.Scene();
 
-      // Camera
+      // Camera setup
       camera = new THREE.PerspectiveCamera(
         75, // Field of view
         window.innerWidth / window.innerHeight, // Aspect ratio
         0.1, // Near clipping plane
         1000 // Far clipping plane
       );
-      camera.position.z = 5; // Set camera position
+      camera.position.set(0, 0, 5); // Position camera
 
-      // Renderer
+      // Renderer setup
       renderer = new THREE.WebGLRenderer({ antialias: true });
       renderer.setSize(window.innerWidth, window.innerHeight);
       document.body.appendChild(renderer.domElement);
 
-      // DeviceOrientationControls
+      // Log to ensure renderer is added
+      console.log('Renderer added to DOM');
+      console.log(`Camera position: ${camera.position.x}, ${camera.position.y}, ${camera.position.z}`);
+
+      // DeviceOrientationControls setup
       controls = new THREE.DeviceOrientationControls(camera);
 
-      // Add some objects to the scene for reference
+      // Add a simple object (cube) for visual reference
       let geometry = new THREE.BoxGeometry(1, 1, 1);
       let material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
       let cube = new THREE.Mesh(geometry, material);
       scene.add(cube);
+      console.log('Cube added to scene');
 
       // Handle window resize
       window.addEventListener('resize', onWindowResize, false);
 
-      // Render the scene
+      // Start rendering the scene
       animate();
     }
 
     function onWindowResize() {
+      // Adjust camera aspect ratio and renderer size on window resize
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
     function animate() {
+      // Continuously update the controls and render the scene
       requestAnimationFrame(animate);
       controls.update();
       renderer.render(scene, camera);
